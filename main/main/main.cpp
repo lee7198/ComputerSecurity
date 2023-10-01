@@ -38,7 +38,7 @@ void des() {
         }
         cout << "8자리를 초과합니다. 다시 입력해주세요." << endl;
         continue;
-    } 
+    }
     getASCII(arr, plaintext);
 }
 
