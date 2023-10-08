@@ -75,7 +75,7 @@ public:
             plainText.ascii += to_string((int)(num[i]));
         }
         
-        cout << "Plaintext (ASCII) \t: \t";
+        cout << "\tPlaintext (ASCII) \t: \t";
         printAscii(num);
         printf("\n");
     }
@@ -99,7 +99,7 @@ public:
             p += 8;
         }
         
-        cout << "Plaintext (Binary) \t: \t";
+        cout << "\tPlaintext (Binary) \t: \t";
         printBinary(bin);
         printf("\n");
     }
@@ -117,7 +117,7 @@ public:
             k = k + 4;
         }
         
-        printf("Plaintext (Hex) \t: \t");
+        printf("\tPlaintext (Hex) \t: \t");
         printHex(plainText.bin);
         printf("\n");
     }
@@ -141,23 +141,45 @@ public:
             temp = DES_IP_TABLE[i];
             p[i] = q[temp - 1];
         }
-        
-        cout << "\nAfter initial permutation(Bin) \t: \t";
+        cout << "\tAfter initial permutation(Bin) \t: \t";
         printBinary(p);
-        cout << "\nAfter initial permutation(Hex) \t: \t";
+        cout << "\n\tAfter initial permutation(Hex) \t: \t";
         printHex(p);
-        
-        
         printf("\n");
     }
     
-    // 2. round
-    void round() {
-        
+    // 2. round division
+    void Divide_L_R(int L0[][4], int R0[][4]) {
+        int k = 0;
+        for(int i=0; i<8; i++) {
+            for(int j=0; j<4; j++) {
+                L0[i][j] = plainText.bin[j + k];
+                R0[i][j] = plainText.bin[j + 32 + k];
+            }
+            k += 4;
+        }
     }
     
+    int* Combine_8_4bit_to_32bit(int arr[8][4]) {
+        int k = 0;
+        int* result = new int[32];
+        
+        for(int i=0; i<8; i++)
+            for(int j=0; j<4; j++)
+                result[j] = arr[i][j];
+        
+        return result;
+    }
+    
+    
+    
     void encryption() {
+        int L0[8][4], R0[8][4];
+        
+        cout << "\n1. Initial Permution\n";
         Plaintext_AfterPermutaion();
+        cout << "\n2. Round Division\n";
+        Divide_L_R(L0, R0);
     }
 };
 
@@ -167,7 +189,6 @@ int main() {
     des.init();
     
     cout << "\n< Encryption >\n";
-    cout << "\n1. Initial Permution\n";
     des.encryption();
     
     return 0;
