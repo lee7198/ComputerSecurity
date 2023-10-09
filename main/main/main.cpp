@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#include <algorithm>
 using namespace std;
 
 struct DES_interface {
@@ -108,7 +109,7 @@ class DES {
         14,6,61,53,45,37,29,
         21,13,5,28,20,12,4
     };
-    int PC_2[64] =
+    int PC_2[48] =
     {
         14,17,11,24,1,5,3,28,
         15,6,21,10,23,19,12,4,
@@ -122,36 +123,6 @@ class DES {
     bitset<64> hexToBitset(const string& hexString) {
         unsigned long long value = stoull(hexString, nullptr, 16);
         return bitset<64>(value);
-    }
-    
-    void printAscii(int num[]) {
-        for(int i=0; i<8; i++)
-            printf("%d", num[i]);
-    }
-    
-    void printBinary(int bin[]) {
-        for(int i=0; i<64; i++) {
-            printf("%d", bin[i]);
-            if((i+1) % 8 == 0)
-                printf(" ");
-        }
-    }
-    
-    void printHex(int bin[]) {
-        int a[4];
-        int k = 0, num = 0;
-        
-        for(int i=0; i< 16; i++) {
-            for(int j=0; j<4; j++) {
-                a[j] = bin[j + k];
-                num = (a[0] * 8) + (a[1] * 4) + (a[2] * 2) + (a[3] * 1);
-            }
-            printf("%X", num);
-            
-            if((i+1) % 2 == 0)
-                printf(" ");
-            k = k + 4;
-        }
     }
     
     void Ascii() {
@@ -208,20 +179,19 @@ class DES {
     }
     
     // 1. Initial Permution
-    int* Plaintext_AfterPermutaion() {
+    int* InitialPermutaion(int* p) {
         int q[64];
-        int *p = this->plainText.bin;
         
         for(int i=0; i<64; i++)
             q[i] = p[i];
         for(int i=0; i<64; i++) {
             p[i] = q[this->DES_IP_TABLE[i] - 1];
         }
-        cout << "\tAfter initial permutation(Bin) \t: \t";
-        printBinary(p);
-        cout << "\n\tAfter initial permutation(Hex) \t: \t";
-        printHex(p);
-        printf("\n");
+//        cout << "\tAfter initial permutation(Bin) \t: \t";
+//        printBinary(p);
+//        cout << "\n\tAfter initial permutation(Hex) \t: \t";
+//        printHex(p);
+//        printf("\n");
         
         return p;
     }
@@ -315,49 +285,27 @@ class DES {
         
         // C, D 초기화
         bitset<28> C = (permutedKey >> 28).to_ullong();
-        bitset<28> D = (permutedKey & std::bitset<56>(0x000000000FFFFFFF)).to_ullong();
-
-        if(!dec)
-            for(int round=0; round <16; ++round){
-                int shiftAmount = (round < 16) ? this->shifts[round] : this->shifts[15];
+        bitset<28> D = (permutedKey & bitset<56>(0x000000000FFFFFFF)).to_ullong();
+        
+        for(int round=0; round <16; ++round){
+            int shiftAmount = (round < 16) ? this->shifts[round] : this->shifts[15];
+            
+            // shift
+            C = (C << shiftAmount) | (C >> (28 - shiftAmount));
+            D = (D << shiftAmount) | (D >> (28 - shiftAmount));
+            
+            // C, D 합치기
+            bitset<56> CD;
+            CD |= C.to_ullong();
+            CD <<= 28;
+            CD |= D.to_ullong();
+            
+            // Permutation Choice2
+            for(int i=0; i<48; ++i)
+                subkey[i] = CD[this->PC_2[i] - 1];
                 
-                // shift
-                C = (C << shiftAmount) | (C >> (28 - shiftAmount));
-                D = (D << shiftAmount) | (D >> (28 - shiftAmount));
-                
-                // C, D 합치기
-                bitset<56> CD;
-                CD |= C.to_ullong();
-                CD <<= 28;
-                CD |= D.to_ullong();
-                
-                // Permutation Choice2
-                for(int i=0; i<48; ++i){
-                    subkey[i] = CD[this->PC_2[i] - 1];
-                }
-                subkey_arr[round] = subkey;
-            }
-        else
-            // for decryption
-            for(int round=15; round >=0; --round) {
-                int shiftAmount = (round < 16) ? this->shifts[round] : this->shifts[15];
-                
-                // shift
-                C = (C << shiftAmount) | (C >> (28 - shiftAmount));
-                D = (D << shiftAmount) | (D >> (28 - shiftAmount));
-                
-                // C, D 합치기
-                bitset<56> CD;
-                CD |= C.to_ullong();
-                CD <<= 28;
-                CD |= D.to_ullong();
-                
-                // Permutation Choice2
-                for(int i=0; i<48; ++i){
-                    subkey[i] = CD[this->PC_2[i] - 1];
-                }
-                subkey_arr[round] = subkey;
-            }
+            subkey_arr[round] = subkey;
+        }
     }
     
     void Sbox(int input[][6], int result[8][4]) {
@@ -407,6 +355,36 @@ public:
             num[i] = plainText.origin[i];
     }
     
+    void printAscii(int num[]) {
+        for(int i=0; i<8; i++)
+            printf("%d", num[i]);
+    }
+    
+    void printBinary(int bin[]) {
+        for(int i=0; i<64; i++) {
+            printf("%d", bin[i]);
+            if((i+1) % 8 == 0)
+                printf(" ");
+        }
+    }
+    
+    void printHex(int bin[]) {
+        int a[4];
+        int k = 0, num = 0;
+        
+        for(int i=0; i< 16; i++) {
+            for(int j=0; j<4; j++) {
+                a[j] = bin[j + k];
+                num = (a[0] * 8) + (a[1] * 4) + (a[2] * 2) + (a[3] * 1);
+            }
+            printf("%X", num);
+            
+            if((i+1) % 2 == 0)
+                printf(" ");
+            k = k + 4;
+        }
+    }
+    
     void init() {
         this->Ascii();
         this->Binary();
@@ -415,26 +393,25 @@ public:
     
     int* encryption() {
         int* chipertext = new int[64];
-        cout << "\n1. Initial Permution\n";
-        int* permuted_arr = Plaintext_AfterPermutaion();
+//        cout << "\n1. Initial Permution\n";
+        int* permuted_arr = InitialPermutaion(this->plainText.bin);
         
         // Division
         Divided divided = Divide_L_R(permuted_arr);
-        cout << "\n2. Rounds\n";
-        
-        // Expansion Permutation
-        int exArr_R[8][6];
+//        cout << "\n2. Rounds\n";
         
         // Key Schedule
         bitset<48>* subKey_arr = new bitset<48>[16];
         Key_Schedule(subKey_arr);
         
-        // Rounds
+        // Expansion Permutation
+        int exArr_R[8][6];
         int* XOR_to_key[16];
         int* XOR_to_p[32];
         int* tempL = new int[32];
         int* tempR = new int[32];
         
+        // Rounds
         for(int i=0; i<16; i++) {
             // Expansion Right Array for each round
             Extend_32_to_48(divided.R, exArr_R);
@@ -463,7 +440,6 @@ public:
                tempR = XOR(32, Combine_8_4bit_to_32bit(divided.L) ,XOR_to_p[i]);
            }
        }
-
        for(int i=0; i<32; i++) {
           chipertext[i] = tempL[i];
           chipertext[i+32] = tempR[i];
@@ -472,59 +448,83 @@ public:
        return InverseInitialPermutaion(chipertext);
     }
 
-    
-    void decryption(const int* chipertext) {
+    int* decryption(int* chipertext) {
+        int* plaintext = new int[64];
+        // Initial Permutation
+        int* permuted_arr = InitialPermutaion(chipertext);
+        
+        // Division
+        Divided divided = Divide_L_R(permuted_arr);
+        
         // Key Schedule
         bitset<48>* subKey_arr = new bitset<48>[16];
         Key_Schedule(subKey_arr, true);
         
-        // chipertext init
-        int chiper_arr [16][32];
-        
-        // convert to 2d arr
-        for(int i=0; i<16; i++)
-            for(int j=0; j<32; j++)
-                chiper_arr[i][j] = chipertext[(i * 32) + j];
-        
-        // Inverse Initial Permutation
-//        int* permuted_arr = Chipertext_AfterPermutaion();
+        // Expansion Permutation
+        int exArr_R[8][6];
+        int* XOR_to_key[16];
+        int* XOR_to_p[32];
+        int* tempL = new int[32];
+        int* tempR = new int[32];
         
         // Rounds
-        for(int i=15; i>=0; i--) {
-            // subkey setting
+        for(int i=0; i<16; i++) {
+            // Expansion Right Array for each round
+            Extend_32_to_48(divided.R, exArr_R);
+            int* arr48_R = Combine_8_6bit_to_48(exArr_R);
+
+            // convert subkey to array
             int subkey_[48];
             for(int j=0; j<48; j++)
                 subkey_[j] = subKey_arr[i][j];
-            
-            // Expansion Permutation
-            int exArr_R[8][6], divide_8_4[8][4];
-            // divide arr
-            for(int x=0; x<8; x++)
-                for(int y=0; y<4; y++)
-                    divide_8_4[x][y] = chiper_arr[i][(x * 4) + y];
-            Extend_32_to_48(divide_8_4, exArr_R);
-            
-            
-        }
+
+            XOR_to_key[i] = XOR(48, arr48_R, subkey_);
+
+            // S BOX (Subtitutaion)
+            int XoR_8_6[8][6];
+            Divide_48bit_to_8_6(XOR_to_key[i], XoR_8_6);
+            int SBOX_arr[8][4];
+            Sbox(XoR_8_6, SBOX_arr);
+
+            // P BOX (Permutation)
+            XOR_to_p[i] = Pbox(SBOX_arr);
+
+            if(i < 15) {
+                tempL = XOR(32, Combine_8_4bit_to_32bit(divided.L) ,XOR_to_p[i]);
+                swap(divided.L ,divided.R);
+           } else {
+               tempR = XOR(32, Combine_8_4bit_to_32bit(divided.L) ,XOR_to_p[i]);
+           }
+       }
+       for(int i=0; i<32; i++) {
+           plaintext[i] = tempL[i];
+           plaintext[i+32] = tempR[i];
+       }
+
+        return InverseInitialPermutaion(plaintext);
     }
 };
-
 
 int main() {
     DES des;
     des.init();
     
     cout << "\n< Encryption >\n";
-    const int* chipertext = des.encryption();
-    cout << "\tCiphertext(Bin) : \n\t";
-    for(int i=0; i<64; i++)
-        cout << chipertext[i];
+    int* chipertext = des.encryption();
+    printf("\tChipertext (Binary) : \t");
+    des.printBinary(chipertext);
+    printf("\n\tChipertext (Hex) \t: \t");
+    des.printHex(chipertext);
     cout << endl;
     
     cout << "\n< Decryption >\n";
-    des.decryption(chipertext);
-//    cout << "\tYour Message : " << plantext << endl;
+    int* plaintext = des.decryption(chipertext);
+    printf("\tPlaintext (Binary) \t: \t");
+    des.printBinary(plaintext);
+    printf("\n\tPlaintext (Hex) \t: \t");
+    des.printHex(plaintext);
     
+    cout << "\n\n";
     
     return 0;
 }
