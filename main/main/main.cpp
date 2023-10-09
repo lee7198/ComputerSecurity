@@ -3,12 +3,10 @@
 #include <bitset>
 using namespace std;
 
-const int SIZE = 64;
-
 struct DES_interface {
     string origin;
     string ascii;
-    int bin[SIZE];
+    int bin[64];
     string hex;
 };
 
@@ -23,7 +21,7 @@ class DES {
     
     const std::string keyString = "133457799BBCDFF";
     const std::bitset<64> key = hexToBitset(keyString);
-    int DES_IP_TABLE[SIZE] =
+    int DES_IP_TABLE[64] =
     {
         58,50,42,34,26,18,10,2,
         60,52,44,36,28,20,12,4,
@@ -34,7 +32,7 @@ class DES {
         61,53,45,37,29,21,13,5,
         63,55,47,39,31,23,15,7
     };
-    int DES_IIP_TABLE[SIZE] =
+    int DES_IIP_TABLE[64] =
     {
         10,9,48,16,56,24,64,32,
         39,7,47,15,55,23,63,31,
@@ -44,6 +42,13 @@ class DES {
         35,3,43,11,51,19,59,27,
         34,2,42,10,50,18,58,26,
         33,1,41,9,49,17,57,25
+    };
+    int P[32] =
+    {
+        16,  7, 20, 21, 29, 12, 28, 17,
+        1, 15, 23, 26,  5, 18, 31, 10,
+        2,  8, 24, 14, 32, 27,  3,  9,
+        19, 13, 30,  6, 22, 11,  4, 25
     };
     int SBox_DES[8][4][16] =
     {
@@ -88,7 +93,7 @@ class DES {
         { 7,11,4,1,9,12,14,2,0,6,10,13,15,3,5,8 },
         { 2,1,14,7,4,10,8,13,15,12,9,0,3,5,6,11 } }
     };
-    int PC_1[SIZE] =
+    int PC_1[64] =
     {
         /* Left Half */
         57, 49, 41, 33, 25, 17,  9,
@@ -106,7 +111,7 @@ class DES {
      8Bit인 (8, 16, 24, 32, 40, 48, 56, 64)는 Parity Bits로 사용한다.
     */
     // Parity Bit가 제거 된 56Bit Key를 매 라운드마다 48Bit 보조키로 선택 시 사용한다.
-    int PC_2[SIZE] =
+    int PC_2[64] =
     {
         14, 17, 11, 24,  1,  5,  3, 28,
         15,  6, 21, 10, 23, 19, 12,  4,
@@ -117,9 +122,9 @@ class DES {
     };
     int shifts[16] = { 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2 };
     
-    bitset<64> hexToBitset(const std::string& hexString) {
-        unsigned long long value = std::stoull(hexString, nullptr, 16);
-        return std::bitset<64>(value);
+    bitset<64> hexToBitset(const string& hexString) {
+        unsigned long long value = stoull(hexString, nullptr, 16);
+        return bitset<64>(value);
     }
     
     void printAscii(int num[]) {
@@ -128,7 +133,7 @@ class DES {
     }
     
     void printBinary(int bin[]) {
-        for(int i=0; i<SIZE; i++) {
+        for(int i=0; i<64; i++) {
             printf("%d", bin[i]);
             if((i+1) % 8 == 0)
                 printf(" ");
@@ -139,7 +144,7 @@ class DES {
         int a[4];
         int k = 0, num = 0;
         
-        for(int i=0; i< SIZE/4; i++) {
+        for(int i=0; i< 16; i++) {
             for(int j=0; j<4; j++) {
                 a[j] = bin[j + k];
                 num = (a[0] * 8) + (a[1] * 4) + (a[2] * 2) + (a[3] * 1);
@@ -191,7 +196,7 @@ class DES {
         int a[4];
         int k = 0, num = 0;
         
-        for(int i=0; i< SIZE/4; i++) {
+        for(int i=0; i<16; i++) {
             for(int j=0; j<4; j++) {
                 a[j] = this->plainText.bin[j + k];
                 num = (a[0] * 8) + (a[1] * 4) + (a[2] * 2) + (a[3] * 1);
@@ -211,9 +216,9 @@ class DES {
         int q[64];
         int *p = this->plainText.bin;
         
-        for(int i=0; i<SIZE; i++)
+        for(int i=0; i<64; i++)
             q[i] = p[i];
-        for(int i=0; i<SIZE; i++) {
+        for(int i=0; i<64; i++) {
             temp = this->DES_IP_TABLE[i];
             p[i] = q[temp - 1];
         }
@@ -240,14 +245,15 @@ class DES {
         return result;
     }
     
-    void Combine_8_4bit_to_32bit(int arr[8][4], int result[32]) {
+    int* Combine_8_4bit_to_32bit(int arr[8][4]) {
         int k = 0;
-        
+        int* result = new int[32];
         for(int i=0; i<8; i++) {
             for(int j=0; j<4; j++)
                 result[j] = arr[i][j];
             k += 4;
         }
+        return result;
     }
     
     void Extend_32_to_48(int arr[8][4], int exArr[8][6]) {
@@ -260,27 +266,26 @@ class DES {
         }
     }
     
-    void Combine_8_6bit_to_48(int arr2[8][6], int result[48]) {
+    int* Combine_8_6bit_to_48(int arr2[8][6]) {
         int k = 0;
+        int* result = new int[48];
         
         for(int i=0; i<8; i++) {
             for(int j=0; j<6; j++)
                 result[j + k] = arr2[i][j];
             k += 6;
         }
-    }
-    
-    int* XOR(int s, int* arr, int* arr2) {
-        int* result = new int[s];
-        if(s == 48)
-            for(int i=0; i<s; i++)
-                result[i] = arr[i] ^ arr2[i];
-        else
-            for(int i=0; i<32; i++)
-                result[i] = arr[i] ^ arr2[i];
         return result;
     }
-    
+    int* XOR(int s, int* arr, int* arr2) {
+        int* result = new int[s];
+        for (int i = 0; i < s; i++) {
+            result[i] = arr[i] ^ arr2[i];
+        }
+        return result;
+    }
+
+
     void Divide_48bit_to_8_6(int arr[], int arr2[][6]) {
         int k = 0;
         
@@ -291,7 +296,7 @@ class DES {
         k += 6;
     }
     
-    bitset<48> Key_Schedule() {
+    void Key_Schedule(bitset<48>* subkey_arr) {
         bitset<56> permutedKey;
         bitset<48> subkey;
         // Permutation Choice1
@@ -320,21 +325,39 @@ class DES {
             for(int i=0; i<48; ++i){
                 subkey[i] = CD[this->PC_2[i] - 1];
             }
+            subkey_arr[round] = subkey;
         }
-        return subkey;
     }
     
-    void Sbox(int exArr[][6]) {
+    void Sbox(int input[][6], int result[8][4]) {
         int num, j = 0, row = 0, col = 0;
         
         for(int i=0; i<8; i++) {
-            row = (exArr[i][0] * 2) + (exArr[i][5] * 1);
-            col = (exArr[i][1] * 8) + (exArr[i][2] * 4) + (exArr[i][3] * 2) + (exArr[i][4] * 1);
+            row = (input[i][0] * 2) + (input[i][5] * 1);
+            col = (input[i][1] * 8) + (input[i][2] * 4) + (input[i][3] * 2) + (input[i][4] * 1);
             num = this->SBox_DES[j][row][col];
-            
+            result[i][0] = (num / 8) ? 1 : 0;
+            num %= 8;
+            result[i][1] = (num / 4) ? 1 : 0;
+            num %= 4;
+            result[i][2] = (num / 2) ? 1 : 0;
+            num %= 2;
+            result[i][3] = (num / 1) ? 1 : 0;
             j++;
             if(i == 8) j = 0;
         }
+    }
+    
+    int* Pbox(int input[8][4]) {
+        int* result = new int[32];
+        
+        for (int i=0; i<8; ++i) {
+            for (int j=0; j<4; ++j) {
+                int bit_position = input[i][j];
+                result[31 - (i * 4 + j)] = bit_position;
+            }
+        }
+        return result;
     }
     
 public:
@@ -359,38 +382,55 @@ public:
         this->Hex();
     }
     
-    void encryption() {
+    string encryption() {
         cout << "\n1. Initial Permution\n";
         int* permuted_arr = Plaintext_AfterPermutaion();
+        string chipertext = "";
         
         // Division
-        Divided divided_arr = Divide_L_R(permuted_arr);
-        cout << "\n2. Round\n";
+        Divided divided = Divide_L_R(permuted_arr);
+        cout << "\n2. Rounds\n";
         
-        // Round
         // Expansion Permutation
         int exArr_R[8][6];
-        
         // Expansion Rigint Array
-        Extend_32_to_48(divided_arr.R, exArr_R);
-        int arr48_R[48];
-        Combine_8_6bit_to_48(exArr_R, arr48_R);
+        Extend_32_to_48(divided.R, exArr_R);
+        int* arr48_R = Combine_8_6bit_to_48(exArr_R);
         
         // Key Schedule
-        bitset<48> subKey = Key_Schedule();
-        // convert type
-        int subKey_arr[48];
-        for(int i=0; i<48; i++)
-            subKey_arr[i] = subKey[i];
+        bitset<48>* subKey_arr = new bitset<48>[16];
+        Key_Schedule(subKey_arr);
         
-        // XOR
-        int* XorResult = new int[48];
-        XorResult = XOR(48, arr48_R, subKey_arr);
+        // Rounds
+        int* XOR_to_key[48];
+        int* XOR_to_p[32];
+        for(int i=0; i<16; i++) {
+            // convert
+            int subkey_[48];
+            for(int j=0; j<48; j++)
+                subkey_[j] = subKey_arr[i][j];
+            // XOR
+            XOR_to_key[i] = XOR(48, arr48_R, subkey_);
+            
+            // S BOX (Subtitutaion)
+            int XoR_8_6[8][6];
+            Divide_48bit_to_8_6(XOR_to_key[i], XoR_8_6);
+            int SBOX_arr[8][4];
+            Sbox(XoR_8_6, SBOX_arr);
+            
+            // P BOX (Permutation)
+            XOR_to_p[i] = XOR(32, Combine_8_4bit_to_32bit(divided.L), Pbox(SBOX_arr));
+        }
+        for(int i=0; i<16; i++)
+            for(int j=0; j<32; j++)
+                chipertext += to_string(XOR_to_p[i][j]);
         
-        // Subtitutaion
-        for(int i=0; i<48; i++)
-            cout << XorResult[i];
+        return chipertext;
+    }
     
+    string decryption() {
+        
+        return "";
     }
 };
 
@@ -400,7 +440,11 @@ int main() {
     des.init();
     
     cout << "\n< Encryption >\n";
-    des.encryption();
+    string chipertext = des.encryption();
+    cout << "\tCiphertext(Bin) : \n\t" << chipertext << endl;
     
+    cout << "\n< Decryption >\n";
+    string plantext = des.decryption();
+    cout << "\tYour Message : " << plantext;
     return 0;
 }
