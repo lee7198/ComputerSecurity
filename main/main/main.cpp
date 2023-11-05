@@ -278,10 +278,22 @@ class DES {
     void Key_Schedule(bitset<48>* subkey_arr, bool dec=false) {
         bitset<56> permutedKey;
         bitset<48> subkey;
+        
+        // for Decryption
+        string str = this->key.to_string();
+        for (int i = 0; i < 32; i++) {
+            std::swap(str[i], str[64 - i - 1]);
+        }
+        bitset<64> reversedKey(str);
+        
         // Permutation Choice1
         for (int i =0; i <56; ++i) {
-            permutedKey[i] = this->key[PC_1[i]-1];
+            if(!dec)
+                permutedKey[i] = this->key[PC_1[i]-1];
+            else
+                permutedKey[i] = reversedKey[PC_1[i]-1];
         }
+    
         
         // C, D 초기화
         bitset<28> C = (permutedKey >> 28).to_ullong();
@@ -434,11 +446,11 @@ public:
             XOR_to_p[i] = Pbox(SBOX_arr);
 
             if(i < 15) {
-                tempL = XOR(32, Combine_8_4bit_to_32bit(divided.L) ,XOR_to_p[i]);
+                tempL = XOR(32, Combine_8_4bit_to_32bit(divided.L), XOR_to_p[i]);
                 swap(divided.L ,divided.R);
-           } else {
-               tempR = XOR(32, Combine_8_4bit_to_32bit(divided.L) ,XOR_to_p[i]);
-           }
+            } else {
+               tempR = XOR(32, Combine_8_4bit_to_32bit(divided.R), XOR_to_p[i]);
+            }
        }
        for(int i=0; i<32; i++) {
           chipertext[i] = tempL[i];
@@ -467,6 +479,7 @@ public:
         int* tempL = new int[32];
         int* tempR = new int[32];
         
+        int k = 16;
         // Rounds
         for(int i=0; i<16; i++) {
             // Expansion Right Array for each round
@@ -476,7 +489,8 @@ public:
             // convert subkey to array
             int subkey_[48];
             for(int j=0; j<48; j++)
-                subkey_[j] = subKey_arr[i][j];
+                subkey_[j] = subKey_arr[k - 1][j];
+            k--;
 
             XOR_to_key[i] = XOR(48, arr48_R, subkey_);
 
@@ -495,6 +509,7 @@ public:
            } else {
                tempR = XOR(32, Combine_8_4bit_to_32bit(divided.L) ,XOR_to_p[i]);
            }
+
        }
        for(int i=0; i<32; i++) {
            plaintext[i] = tempL[i];
@@ -511,19 +526,33 @@ int main() {
     
     cout << "\n< Encryption >\n";
     int* chipertext = des.encryption();
-    printf("\tChipertext (Binary) : \t");
+    cout << "\tChipertext (Binary) : \t";
     des.printBinary(chipertext);
-    printf("\n\tChipertext (Hex) \t: \t");
+    cout << "\n\tChipertext (Hex) \t: \t";
     des.printHex(chipertext);
     cout << endl;
     
     cout << "\n< Decryption >\n";
     int* plaintext = des.decryption(chipertext);
-    printf("\tPlaintext (Binary) \t: \t");
+    cout << "\tPlaintext (Binary) \t: \t";
     des.printBinary(plaintext);
-    printf("\n\tPlaintext (Hex) \t: \t");
+    cout << "\n\tPlaintext (Hex) \t: \t";
     des.printHex(plaintext);
+    cout << "\n\n";
     
+    bool resultMatch = true;
+    for (int i = 0; i < 64; i++) {
+        if (chipertext[i] != plaintext[i]) {
+            resultMatch = false;
+            break;
+        }
+     }
+
+    if (resultMatch) {
+        cout << "결과가 일치합니다." << endl;
+    } else {
+        cout << "결과가 일치하지 않습니다..." << endl;
+    }
     cout << "\n\n";
     
     return 0;
