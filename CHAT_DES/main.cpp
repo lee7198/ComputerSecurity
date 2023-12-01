@@ -1,69 +1,29 @@
 #include <iostream>
-// #include <winsock2.h>
-#include <openssl/des.h>
+#include "des.h"
 using namespace std;
 
-// Using a namespace to prevent potential naming conflicts and to logically group
-// associated functionalities.
-namespace EncryptionUtils {
+int main(void) {
+    // /* unsigned long */
+    // DWORD mData[8] = { 0, };
+    // DWORD mRoundKey[32] = { 0, };
 
-    /**
-    * @class DESEncryptor
-    * Represents a DES encryption utility.
-    */
-    class DESEncryptor {
-    private:
-        DES_key_schedule keySchedule; // Key schedule for DES encryption
+    // /* Key 생성 */ 
+    // KeySchedule("lucky", mRoundKey);
 
-    public:
-        /**
-        * Constructs a DESEncryptor object with the provided encryption key.
-        *
-        * @param key The encryption key.
-        */
-        DESEncryptor(const unsigned char* key) {
-            DES_set_key((DES_cblock*)key, &keySchedule);
-        }
+    // /* 암호화할 내용 입력 */
+    // cout << "● 암호화될 내용을 입력 → ";
+    // fscanf(stdin, "%s", mData);
 
-        /**
-        * Encrypts the provided plaintext using DES encryption.
-        *
-        * @param plaintext The plaintext to be encrypted.
-        * @return std::string The encrypted ciphertext.
-        */
-        std::string encrypt(const std::string& plaintext) {
-            std::string ciphertext;
+    // /* Encryption */
+    // Cryption_EnDe(1, mData, mRoundKey);
+    // cout << endl << "========== Encryption ==========" << endl;
+    // printf("● 암호화 된 내용 : %s \n", mData);
 
-            // Calculate the required size for the ciphertext buffer
-            size_t ciphertextSize = ((plaintext.size() + 7) / 8) * 8;
-            ciphertext.resize(ciphertextSize);
-
-            // Encrypt the plaintext using DES
-            DES_ecb_encrypt((const_DES_cblock*)plaintext.c_str(), (DES_cblock*)ciphertext.data(), &keySchedule, DES_ENCRYPT);
-
-            return ciphertext;
-        }
-    };
-}
-
-int main() {
-    // Example usage of the DESEncryptor class
-    {
-        // Encryption key (8 bytes)
-        unsigned char key[] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF };
-
-        // Plaintext to be encrypted
-        std::string plaintext = "Hello, World!";
-
-        // Create a DESEncryptor object with the encryption key
-        EncryptionUtils::DESEncryptor encryptor(key);
-
-        // Encrypt the plaintext using DES encryption
-        std::string ciphertext = encryptor.encrypt(plaintext);
-
-        // Print the encrypted ciphertext
-        std::cout << "Encrypted ciphertext: " << ciphertext << std::endl;
-    }
+    // /* Decryption */
+    // Cryption_EnDe(2, mData, mRoundKey);
+    // cout << endl << "========== Decryption ==========" << endl;
+    // printf("● 복호화 된 내용 : %s \n", mData);
+    printf("hello");
 
     return 0;
 }

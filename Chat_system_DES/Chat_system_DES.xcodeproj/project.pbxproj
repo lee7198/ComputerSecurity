@@ -7,10 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9B2B0CEA2B199A1E00A89F29 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9B2B0CE92B199A1E00A89F29 /* main.cpp */; };
+		9B4E04382B18E0A800BF1D74 /* des.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9B4E04362B18E0A800BF1D74 /* des.cpp */; };
 		9B6650DE2B187CDD006FD6D3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9B6650DD2B187CDD006FD6D3 /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		9B2B0CE52B199A1E00A89F29 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		9B6650D82B187CDD006FD6D3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -23,11 +34,22 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9B2B0CE72B199A1E00A89F29 /* Server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Server; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B2B0CE92B199A1E00A89F29 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		9B4E04362B18E0A800BF1D74 /* des.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = des.cpp; sourceTree = "<group>"; };
+		9B4E04372B18E0A800BF1D74 /* des.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = des.h; sourceTree = "<group>"; };
 		9B6650DA2B187CDD006FD6D3 /* Chat_system_DES */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Chat_system_DES; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B6650DD2B187CDD006FD6D3 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		9B2B0CE42B199A1E00A89F29 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9B6650D72B187CDD006FD6D3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -38,10 +60,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9B2B0CE82B199A1E00A89F29 /* Server */ = {
+			isa = PBXGroup;
+			children = (
+				9B2B0CE92B199A1E00A89F29 /* main.cpp */,
+			);
+			path = Server;
+			sourceTree = "<group>";
+		};
 		9B6650D12B187CDD006FD6D3 = {
 			isa = PBXGroup;
 			children = (
 				9B6650DC2B187CDD006FD6D3 /* Chat_system_DES */,
+				9B2B0CE82B199A1E00A89F29 /* Server */,
 				9B6650DB2B187CDD006FD6D3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -50,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				9B6650DA2B187CDD006FD6D3 /* Chat_system_DES */,
+				9B2B0CE72B199A1E00A89F29 /* Server */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -58,6 +90,8 @@
 			isa = PBXGroup;
 			children = (
 				9B6650DD2B187CDD006FD6D3 /* main.cpp */,
+				9B4E04362B18E0A800BF1D74 /* des.cpp */,
+				9B4E04372B18E0A800BF1D74 /* des.h */,
 			);
 			path = Chat_system_DES;
 			sourceTree = "<group>";
@@ -65,6 +99,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		9B2B0CE62B199A1E00A89F29 /* Server */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9B2B0CEB2B199A1E00A89F29 /* Build configuration list for PBXNativeTarget "Server" */;
+			buildPhases = (
+				9B2B0CE32B199A1E00A89F29 /* Sources */,
+				9B2B0CE42B199A1E00A89F29 /* Frameworks */,
+				9B2B0CE52B199A1E00A89F29 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Server;
+			productName = Server;
+			productReference = 9B2B0CE72B199A1E00A89F29 /* Server */;
+			productType = "com.apple.product-type.tool";
+		};
 		9B6650D92B187CDD006FD6D3 /* Chat_system_DES */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9B6650E12B187CDD006FD6D3 /* Build configuration list for PBXNativeTarget "Chat_system_DES" */;
@@ -91,6 +142,9 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					9B2B0CE62B199A1E00A89F29 = {
+						CreatedOnToolsVersion = 15.0.1;
+					};
 					9B6650D92B187CDD006FD6D3 = {
 						CreatedOnToolsVersion = 15.0.1;
 					};
@@ -110,15 +164,25 @@
 			projectRoot = "";
 			targets = (
 				9B6650D92B187CDD006FD6D3 /* Chat_system_DES */,
+				9B2B0CE62B199A1E00A89F29 /* Server */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		9B2B0CE32B199A1E00A89F29 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B2B0CEA2B199A1E00A89F29 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9B6650D62B187CDD006FD6D3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B4E04382B18E0A800BF1D74 /* des.cpp in Sources */,
 				9B6650DE2B187CDD006FD6D3 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -126,6 +190,22 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		9B2B0CEC2B199A1E00A89F29 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		9B2B0CED2B199A1E00A89F29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		9B6650DF2B187CDD006FD6D3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -250,11 +330,33 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				"EXCLUDED_ARCHS[sdk=*]" = arm64;
-				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				"HEADER_SEARCH_PATHS[arch=*]" = /usr/local/opt/openssl/include;
-				OTHER_LDFLAGS = "-L/usr/local/opt/openssl/lib";
-				"OTHER_LDFLAGS[arch=*]" = "-L/usr/local/opt/openssl/lib";
+				"EXCLUDED_ARCHS[sdk=*]" = x86_64;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/opt/openssl/include,
+					/usr/local/homebrew/Cellar/boost/1.83.0,
+					"/opt/homebrew/cellar/openssl@3/3.1.4",
+					/usr/local/homebrew/cellar/boost/1.83.0/include,
+				);
+				"HEADER_SEARCH_PATHS[arch=*]" = (
+					/usr/local/opt/openssl/include,
+					"/opt/homebrew/cellar/openssl@3/3.1.4",
+					/usr/local/homebrew/Cellar/boost/1.83.0,
+					/usr/local/homebrew/cellar/boost/1.83.0/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/homebrew/Cellar/boost/1.83.0/lib,
+					"/opt/homebrew/cellar/openssl@3/3.1.4",
+				);
+				OTHER_LDFLAGS = (
+					"-L/usr/local/opt/openssl/lib",
+					"-lboost_regex",
+					"-lbost_asio",
+					"-lboost_bind",
+				);
+				"OTHER_LDFLAGS[arch=*]" = (
+					"-L/usr/local/opt/openssl/lib",
+					"-lboost_regex",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -263,8 +365,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
-				OTHER_LDFLAGS = "-L/usr/local/opt/openssl/lib";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/opt/openssl/include,
+					/usr/local/homebrew/Cellar/boost/1.83.0,
+					"/opt/homebrew/cellar/openssl@3/3.1.4",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/homebrew/Cellar/boost/1.83.0,
+					"/opt/homebrew/cellar/openssl@3/3.1.4",
+				);
+				OTHER_LDFLAGS = (
+					"-L/usr/local/opt/openssl/lib",
+					"-lboost_regex",
+					"-lbost_asio",
+					"-lboost_bind",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -272,6 +387,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		9B2B0CEB2B199A1E00A89F29 /* Build configuration list for PBXNativeTarget "Server" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B2B0CEC2B199A1E00A89F29 /* Debug */,
+				9B2B0CED2B199A1E00A89F29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		9B6650D52B187CDD006FD6D3 /* Build configuration list for PBXProject "Chat_system_DES" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
