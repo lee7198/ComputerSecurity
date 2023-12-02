@@ -8,6 +8,19 @@
       "args": [],
       "cwd": "/Users/lee/KMU/ComputerSecurity/CHAT_DES",
       "program": "/Users/lee/KMU/ComputerSecurity/CHAT_DES/build/Debug/outDebug"
+    },
+    {
+      "name": "C/C++: clang++ 활성 파일 빌드 및 디버그",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${fileDirname}/${fileBasenameNoExtension}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb",
+      "preLaunchTask": "C/C++: clang++ 활성 파일 빌드"
     }
   ]
 }
