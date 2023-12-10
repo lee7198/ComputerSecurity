@@ -1,12 +1,9 @@
-//
-//  des.h
-//  Chat_system_DES
-//
-//  Created by LEE on 12/1/23.
-//
-
 #ifndef des_h
 #define des_h
+
+#include <stdio.h>
+#include <iostream>
+#include <string.h>
 
 /*
 * AND (Logical Conjunction) : 모든 논리 변수가 1일 때만 1이 되고, 어느 한 변수라도 0이면 그 결과는 0이다.
