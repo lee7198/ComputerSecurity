@@ -5,14 +5,13 @@
 using namespace std;
 
 long int n, t, flag, e[100], d[100], temp[100], j, m[100], en[100], i;
-char msg[100];
+string msg;
+// 두 소수
+long int p = 4019;
+long int q = 977;
 
-long int p = 47;
-long int q = 53;
 
-
-int prime(long int pr)
-{
+int gcd(long int pr) {
     int i;
     j = sqrt(pr);
     for (i = 2; i <= j; i++)
@@ -23,6 +22,7 @@ int prime(long int pr)
     return 1;
 }
 
+// 공개키와 개인키를 생성
 long int cd(long int x) {
     long int k = 1;
     while (1)
@@ -33,6 +33,7 @@ long int cd(long int x) {
     }
 }
 
+// enc key 생성
 void ce() {
     int k;
     k = 0;
@@ -40,7 +41,7 @@ void ce() {
     {
         if (t % i == 0)
             continue;
-        flag = prime(i);
+        flag = gcd(i);
         if (flag == 1 && i != p && i != q)
         {
             e[k] = i;
@@ -56,11 +57,12 @@ void ce() {
     }
 }
 
-string encrypt() {
+string encrypt(string msg) {
     long int pt, ct, key = e[0], k, len;
     string result;
     i = 0;
-    len = strlen(msg);
+    len = msg.length();
+    
     while (i != len)
     {
         pt = m[i];
@@ -77,14 +79,13 @@ string encrypt() {
         i++;
     }
     en[i] = -1;
-    // cout << "\nTHE ENCRYPTED MESSAGE IS\n";
     for (i = 0; en[i] != -1; i++)
         result += en[i];
 
     return result;
 }
 
-string decrypt() {
+string decrypt(long int *en, long int n, long int *d) {
     long int pt, ct, key = d[0], k;
     string result;
     i = 0;
@@ -102,7 +103,6 @@ string decrypt() {
         i++;
     }
     m[i] = -1;
-    // cout << "\nTHE DECRYPTED MESSAGE IS\n";
     for (i = 0; m[i] != -1; i++)
         result += m[i];
 
@@ -111,8 +111,9 @@ string decrypt() {
 
 int main() {
     cout << "\nENTER MESSAGE\n";
-    fflush(stdin);
-    cin >> msg;
+    // fflush(stdin);
+    // cin >> msg;
+    msg = "hello world";
 
     for (i = 0; msg[i] != '\0'; i++)
         m[i] = msg[i];
@@ -127,10 +128,10 @@ int main() {
         cout << e[i] << "\t" << d[i] << endl;
 
     cout << "\nTHE ENCRYPTED MESSAGE" << endl;
-    cout << encrypt() << endl;
+    cout << encrypt(msg) << endl;
 
     cout << "\nTHE DECRYPTED MESSAGE" << endl;
-    cout << decrypt() << endl;
+    cout << decrypt(en, n, d) << endl;
 
     return 0;
 }

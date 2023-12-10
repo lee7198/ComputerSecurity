@@ -154,11 +154,12 @@ void send_msg(const std::string &msg){
         std::string receive_name = msg.substr(first_space+2, space-first_space-2);
         std::string send_name = msg.substr(1, first_space-2);
         if(clnt_socks.find(receive_name) == clnt_socks.end()) {
-            // 如果私聊的用户不存在
+            // 비공개 사용자가 존재하지 않는다면
             std::string error_msg = "[error] 사용자가 존재하지 않습니다. " + receive_name;
             send(clnt_socks[send_name], error_msg.c_str(), error_msg.length()+1, 0);
         }
         else {
+            std::cout << send_name << " -> " << receive_name << msg << std::endl;
             send(clnt_socks[receive_name], msg.c_str(), msg.length()+1, 0);
             send(clnt_socks[send_name], msg.c_str(), msg.length()+1, 0);
         }
