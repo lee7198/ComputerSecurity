@@ -10,14 +10,22 @@
 #include <stdarg.h>
 
 #define SERVER_PORT 5208 
-#define BUF_SIZE 1024
-#define MAX_CLNT 32   
+#define BUF_SIZE 4096
+#define MAX_CLNT 8
+
+struct RSA_BOX {
+    long int en[100];
+    long int n;
+    long int d[100];
+    std::string msg;
+};
 
 void handle_clnt(int clnt_sock);
-void send_msg(const std::string &msg);
+void send_msg(struct RSA_BOX *data);
 int output(const char *arg,...);
 int error_output(const char *arg,...);
 void error_handling(const std::string &message);
+
 
 // 현재 사용자 수
 int clnt_cnt = 0;
@@ -27,7 +35,7 @@ std::mutex mtx;
 std::unordered_map<std::string, int>clnt_socks;
 
 int main(int argc,const char **argv,const char **envp){
-    int serv_sock,clnt_sock;
+    int serv_sock, clnt_sock;
     struct sockaddr_in serv_addr, clnt_addr;
     socklen_t clnt_addr_size;
 
@@ -83,12 +91,22 @@ int main(int argc,const char **argv,const char **envp){
 }
 
 void handle_clnt(int clnt_sock){
-    char msg[BUF_SIZE];
+    char buffer[BUF_SIZE];
+    // std::string msg;
     int flag = 0;
 
-    // Client의 이름 prefix로 지정
+    // client의 이름 prefix로 지정
     char tell_name[13] = "#new client:";
-    while(recv(clnt_sock, msg, sizeof(msg),0) != 0){
+    while(recv(clnt_sock, buffer, sizeof(buffer),0) != 0){
+        RSA_BOX data;
+        char msg[BUF_SIZE];
+
+        // 수시받은 데이터 처리
+        memcpy(&data, buffer, sizeof(data));
+        std::strcpy(msg, data.msg.c_str());
+        std::cout << "DATA.N: " << data.n << std::endl;
+        std::cout << "DATA.MSG: " << data.msg << std::endl;
+
         // 채팅방에 처음 입장할 시 brodcast 확인
         if (std::strlen(msg) > std::strlen(tell_name)) {
             // msg에 '#new client:'가 있는지 확인
@@ -115,8 +133,11 @@ void handle_clnt(int clnt_sock){
             }
         }
 
-        if(flag == 0)
-            send_msg(std::string(msg));
+        if(flag == 0) {
+            // 클라이언트들에게 메세지 전송
+            // send_msg(std::string(msg));
+            send_msg(&data);
+        }
     }
     if(flag == 0){
         // CLient가 연결을 끊고 clnt_socks에서 제거
@@ -131,8 +152,9 @@ void handle_clnt(int clnt_sock){
         }
         clnt_cnt--;
         mtx.unlock();
-        leave_msg = name + " 가 채팅방을 나갔습니다.";
-        send_msg(leave_msg);
+        RSA_BOX leave_data;
+        leave_data.msg = name + " 가 채팅방을 나갔습니다.";
+        send_msg(&leave_data);
         output("%s 가 채팅방을 나갔습니다.\n", name.c_str());
         close(clnt_sock);
     }
@@ -141,9 +163,11 @@ void handle_clnt(int clnt_sock){
     }
 }
 
-void send_msg(const std::string &msg){
+void send_msg(RSA_BOX *data){
+    std::string msg = data->msg;
+// void send_msg(const std::string &msg){
     mtx.lock();
-    // 비공개 채팅 메세지 형식: [send_clnt] @recv_clnt message
+    // 채팅 메세지 형식: [send_clnt] @recv_clnt message
     // @를 확인하여 비공개 처리를 합니다.
     std::string pre = "@";
     int first_space = msg.find_first_of(" ");
@@ -156,18 +180,19 @@ void send_msg(const std::string &msg){
         if(clnt_socks.find(receive_name) == clnt_socks.end()) {
             // 비공개 사용자가 존재하지 않는다면
             std::string error_msg = "[error] 사용자가 존재하지 않습니다. " + receive_name;
-            send(clnt_socks[send_name], error_msg.c_str(), error_msg.length()+1, 0);
+            data->msg = error_msg;
+            send(clnt_socks[send_name], data, sizeof(data), 0);
         }
         else {
             std::cout << send_name << " -> " << receive_name << msg << std::endl;
-            send(clnt_socks[receive_name], msg.c_str(), msg.length()+1, 0);
-            send(clnt_socks[send_name], msg.c_str(), msg.length()+1, 0);
+            send(clnt_socks[receive_name], data, sizeof(data), 0);
+            send(clnt_socks[send_name], data, sizeof(data), 0);
         }
     }
     else {
         // 실시간 채팅
         for (auto it = clnt_socks.begin(); it != clnt_socks.end(); it++) {
-            send(it->second, msg.c_str(), msg.length()+1, 0);
+            send(it->second, data, sizeof(data), 0);
         }
     }
     mtx.unlock();

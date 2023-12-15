@@ -2,6 +2,8 @@
 #include<math.h>
 #include<string.h>
 #include<stdlib.h>
+#include <sstream>
+#include <vector>
 using namespace std;
 
 long int n, t, flag, e[100], d[100], temp[100], j, m[100], en[100], i;
@@ -109,10 +111,20 @@ string decrypt(long int *en, long int n, long int *d) {
     return result;
 }
 
+vector<int> split(string str, char Delimiter) {
+    istringstream iss(str); 
+    string buffer;
+    vector<int> result;
+    
+    while (getline(iss, buffer, Delimiter)) {    
+        int num = stoi(buffer);
+        result.push_back(num);
+    }
+
+    return result;
+}
+
 int main() {
-    cout << "\nENTER MESSAGE\n";
-    // fflush(stdin);
-    // cin >> msg;
     msg = "hello world";
 
     for (i = 0; msg[i] != '\0'; i++)

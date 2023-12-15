@@ -9,26 +9,12 @@
 #include <arpa/inet.h>
 #include <stdarg.h>
 #include <sstream>
+#include <vector>
 using namespace std;
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 4096
 #define SERVER_PORT 5208
 #define IP "127.0.0.1"
-
-struct MSG_DATA
-{
-    char* message;
-    int n;
-    int* e;
-};
-
-
-// RSA
-int n, t, flag, e[100], d[100], temp[100], j, m[100], en[100], i;
-string msg_rsa;
-// 두 소수
-int p = 4019;
-int q = 977;
 
 // socket
 void send_msg(int sock);
@@ -37,11 +23,26 @@ int output(const char *arg,...);
 int error_output(const char *arg,...);
 void error_handling(const string &message);
 // RSA
-int gcd(int pr);
-int cd(int x);
-void ce();
+int gcd(long int pr);
+int cd(int long x);
+void ce(long int t, long int flag);
 string encrypt(string msg_);
-string decrypt(int *en, int n, int e);
+string decrypt(vector<long int> en, long int n, vector<long int> d);
+// convert
+vector<long int> split(string str, char Delimiter);
+
+struct RSA_BOX {
+    long int en[100];
+    long int n;
+    long int d[100];
+    string msg;
+};
+
+// RSA
+long int n, t, flag, e[100], d[100], temp[100], m[100], en[100];
+// 두 소수
+long int p = 4019;
+long int q = 977;
 
 string name = "RSA_CHAT";
 string msg;
@@ -77,8 +78,17 @@ int main(int argc,const char **argv,const char **envp){
         error_handling("connect() failed!");
     }
     // serverd
+    RSA_BOX data;
     string my_name = "#new client:" + string(argv[1]);
-    send(sock, my_name.c_str(), my_name.length() + 1, 0);
+    cout << data.msg << endl;
+    // strcpy(data.msg, my_name.c_str());
+    data.msg = my_name;
+
+    // 구조체를 8비트 단위로 변환합니다.
+    char *buffer = new char[sizeof(data)];
+    memcpy(buffer, &data, sizeof(data));
+
+    send(sock, buffer, sizeof(data), 0);
     
     // 메시지를 보내고 받는 스레드 생성
     thread snd(send_msg, sock);
@@ -93,6 +103,7 @@ int main(int argc,const char **argv,const char **envp){
 }
 
 void send_msg(int sock){
+
     while(1){
         getline(cin, msg);
         if (msg == "Quit"|| msg == "quit"){
@@ -101,40 +112,86 @@ void send_msg(int sock){
         }
 
         // RSA
-        for (i = 0; msg[i] != '\0'; i++)
+        for (int i = 0; msg[i] != '\0'; i++)
             m[i] = msg[i];
 
         // 소수 찾기
         n = p * q;
         t = (p - 1) * (q - 1);
         // key 생성
-        ce();
+        ce(t, flag);
+        // 암호화
+        encrypt(msg);
 
-
-        MSG_DATA msg_data;
 
         // [name] massage 형식
-        string name_msg = name + " " + encrypt(msg);
+        string name_msg = name + " " + string(msg);
+
+        RSA_BOX data;
+        memcpy(&data.n, &n, sizeof(long));
+        memcpy(&data.en, &en, sizeof(long)*100);
+        memcpy(&data.d, &d, sizeof(long)*100);
+        // strcpy(data.msg, name_msg);
+        data.msg = name_msg;
+
+        // 구조체를 8비트 단위로 변환합니다.
+        char *buffer = new char[sizeof(data)];
+        memcpy(buffer, &data, sizeof(data));
 
         ostringstream oss;
-        oss << name_msg << "&" << n << "[";
-        for (int k: e) {
+        oss << name_msg << "{";
+        for (long int k: en)
             oss << k << ",";
-        }
+        oss << "}";
+
+        oss << "&" << n << "[";
+        for (long int k: d)
+            oss << k << ",";
         oss << "]";
 
-        send(sock, oss.str().c_str(), oss.str().length() + 1, 0);
+        // send(sock, oss.str().c_str(), oss.str().length() + 1, 0);
+        send(sock, buffer, sizeof(data), 0);
     }
 }
 
 void recv_msg(int sock){
+    char buffer[BUF_SIZE];
     char name_msg[BUF_SIZE + name.length() + 1];
     while (1){
-        int str_len = recv(sock, name_msg, BUF_SIZE+name.length() + 1, 0);
-        if (str_len == -1){
-            exit(-1);
+        int str_len = recv(sock, buffer, sizeof(buffer), 0);
+        if (str_len == -1) exit(-1);
+        
+        string name_msg_ = string(name_msg);
+        RSA_BOX data;
+        // 수시받은 데이터 처리
+        memcpy(&data, buffer, sizeof(data));
+
+        cout << "DATA.N: " << data.n << endl;
+        cout << "DATA.MSG: " << data.msg << endl;
+
+        if(name_msg_.find("&") != string::npos) {
+            // decrypt에 필요한 정보들
+            int first_space = name_msg_.find_first_of(" ");
+            int en_idx  = name_msg_.find_last_of("{");
+            int key_idx  = name_msg_.find_last_of("&");
+            int d_idx  = name_msg_.find_last_of("[");
+
+            string sender = name_msg_.substr(0, first_space);
+            string cypher_str = name_msg_.substr(en_idx+1, key_idx-en_idx-3);
+            long int key = stoi(name_msg_.substr(key_idx+1, d_idx-key_idx-1));
+            string d_array_str = name_msg_.substr(d_idx+1, name_msg_.length()-d_idx-3);
+
+            vector<long int> d_array = split(d_array_str, ',');
+            vector<long int> en_array = split(cypher_str, ',');
+            cout << "d size: " << d_array.size() << endl;
+            cout << "en size: " << en_array.size() << endl;
+            cout << key << endl;
+            // decription a ciphertext
+            cout << sender << " " << decrypt(en_array, key, d_array) << endl;
+        } else {
+            cout << string(name_msg) << endl;
         }
-        cout<<string(name_msg)<<endl;
+
     }
 }
 
@@ -162,11 +219,10 @@ void error_handling(const string &message){
 }
 
 // RSA
-int gcd(int pr) {
+int gcd(long int pr) {
     int i;
-    j = sqrt(pr);
-    for (i = 2; i <= j; i++)
-    {
+    int j = sqrt(pr);
+    for (i = 2; i <= j; i++) {
         if (pr % i == 0)
             return 0;
     }
@@ -174,10 +230,9 @@ int gcd(int pr) {
 }
 
 // 공개키와 개인키를 생성
-int cd(int x) {
-    int k = 1;
-    while (1)
-    {
+int cd(long int x) {
+    long int k = 1;
+    while (1) {
         k = k + t;
         if (k % x == 0)
             return (k / x);
@@ -185,16 +240,14 @@ int cd(int x) {
 }
 
 // enc key 생성
-void ce() {
+void ce(long int t, long int flag) {
     int k;
     k = 0;
-    for (i = 2; i < t; i++)
-    {
+    for (int i = 2; i < t; i++) {
         if (t % i == 0)
             continue;
         flag = gcd(i);
-        if (flag == 1 && i != p && i != q)
-        {
+        if (flag == 1 && i != p && i != q) {
             e[k] = i;
             flag = cd(e[k]);
             if (flag > 0)
@@ -209,18 +262,16 @@ void ce() {
 }
 
 string encrypt(string msg) {
-    int pt, ct, key = e[0], k, len;
+    long int pt, ct, key = e[0], k, len;
     string result;
-    i = 0;
+    int i = 0;
     len = msg.length();
     
-    while (i != len)
-    {
+    while (i != len) {
         pt = m[i];
         pt = pt - 96;
         k = 1;
-        for (j = 0; j < key; j++)
-        {
+        for (int j = 0; j < key; j++) {
             k = k * pt;
             k = k % n;
         }
@@ -230,22 +281,20 @@ string encrypt(string msg) {
         i++;
     }
     en[i] = -1;
-    for (i = 0; en[i] != -1; i++)
+    for (int i = 0; en[i] != -1; i++)
         result += en[i];
 
     return result;
 }
 
-string decrypt(int *en, int n, int *d) {
-    int pt, ct, key = d[0], k;
+string decrypt(vector<long int> en, long int n, vector<long int> d) {
+    long int pt, ct, key = d[0], k;
     string result;
-    i = 0;
-    while (en[i] != -1)
-    {
+    int i = 0;
+    while (en[i] != -1) {
         ct = temp[i];
         k = 1;
-        for (j = 0; j < key; j++)
-        {
+        for (int j = 0; j < key; j++) {
             k = k * ct;
             k = k % n;
         }
@@ -254,8 +303,21 @@ string decrypt(int *en, int n, int *d) {
         i++;
     }
     m[i] = -1;
-    for (i = 0; m[i] != -1; i++)
+    for (int i = 0; m[i] != -1; i++)
         result += m[i];
+
+    return result;
+}
+
+vector<long int> split(string str, char Delimiter) {
+    istringstream iss(str); 
+    string buffer;
+    vector<long int> result;
+    
+    while (getline(iss, buffer, Delimiter)) {    
+        long int num = stoi(buffer);
+        result.push_back(num);
+    }
 
     return result;
 }
