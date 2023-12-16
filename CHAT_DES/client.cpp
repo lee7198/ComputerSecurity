@@ -8,7 +8,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdarg.h>
-#include <sstream>
 #include <vector>
 using namespace std;
 
@@ -27,9 +26,9 @@ int gcd(long int pr);
 int cd(int long x);
 void ce(long int t, long int flag);
 string encrypt(string msg_);
-string decrypt(vector<long int> en, long int n, vector<long int> d);
+string decrypt(long int en[100], long int n, long int d[100]);
 // convert
-vector<long int> split(string str, char Delimiter);
+
 
 struct RSA_BOX {
     long int en[100];
@@ -103,7 +102,6 @@ int main(int argc,const char **argv,const char **envp){
 }
 
 void send_msg(int sock){
-
     while(1){
         getline(cin, msg);
         if (msg == "Quit"|| msg == "quit"){
@@ -123,7 +121,6 @@ void send_msg(int sock){
         // 암호화
         encrypt(msg);
 
-
         // [name] massage 형식
         string name_msg = name + " " + string(msg);
 
@@ -133,65 +130,32 @@ void send_msg(int sock){
         memcpy(&data.d, &d, sizeof(long)*100);
         // strcpy(data.msg, name_msg);
         data.msg = name_msg;
-
+        
         // 구조체를 8비트 단위로 변환합니다.
         char *buffer = new char[sizeof(data)];
         memcpy(buffer, &data, sizeof(data));
-
-        ostringstream oss;
-        oss << name_msg << "{";
-        for (long int k: en)
-            oss << k << ",";
-        oss << "}";
-
-        oss << "&" << n << "[";
-        for (long int k: d)
-            oss << k << ",";
-        oss << "]";
-
-        // send(sock, oss.str().c_str(), oss.str().length() + 1, 0);
+        
         send(sock, buffer, sizeof(data), 0);
     }
 }
 
 void recv_msg(int sock){
     char buffer[BUF_SIZE];
-    char name_msg[BUF_SIZE + name.length() + 1];
-    while (1){
-        int str_len = recv(sock, buffer, sizeof(buffer), 0);
-        if (str_len == -1) exit(-1);
-        
-        string name_msg_ = string(name_msg);
-        RSA_BOX data;
-        // 수시받은 데이터 처리
-        memcpy(&data, buffer, sizeof(data));
 
+    while(1) {
+        // err 처리
+        if (recv(sock, buffer, sizeof(buffer), 0) == -1) 
+            exit(-1);
+
+        // 수시받은 데이터 처리
+        RSA_BOX data;
+        memcpy(&data, buffer, sizeof(data));
+        cout << "DATASIZE: " << sizeof(data) << endl;
         cout << "DATA.N: " << data.n << endl;
         cout << "DATA.MSG: " << data.msg << endl;
-
-        if(name_msg_.find("&") != string::npos) {
-            // decrypt에 필요한 정보들
-            int first_space = name_msg_.find_first_of(" ");
-            int en_idx  = name_msg_.find_last_of("{");
-            int key_idx  = name_msg_.find_last_of("&");
-            int d_idx  = name_msg_.find_last_of("[");
-
-            string sender = name_msg_.substr(0, first_space);
-            string cypher_str = name_msg_.substr(en_idx+1, key_idx-en_idx-3);
-            long int key = stoi(name_msg_.substr(key_idx+1, d_idx-key_idx-1));
-            string d_array_str = name_msg_.substr(d_idx+1, name_msg_.length()-d_idx-3);
-
-            vector<long int> d_array = split(d_array_str, ',');
-            vector<long int> en_array = split(cypher_str, ',');
-            cout << "d size: " << d_array.size() << endl;
-            cout << "en size: " << en_array.size() << endl;
-            cout << key << endl;
-            // decription a ciphertext
-            cout << sender << " " << decrypt(en_array, key, d_array) << endl;
-        } else {
-            cout << string(name_msg) << endl;
-        }
-
+        if(data.n)
+            cout << decrypt(data.en, data.n, data.d) << endl;
+        cout << "\n";
     }
 }
 
@@ -287,7 +251,7 @@ string encrypt(string msg) {
     return result;
 }
 
-string decrypt(vector<long int> en, long int n, vector<long int> d) {
+string decrypt(long int en[100], long int n, long int d[100]) {
     long int pt, ct, key = d[0], k;
     string result;
     int i = 0;
@@ -305,19 +269,6 @@ string decrypt(vector<long int> en, long int n, vector<long int> d) {
     m[i] = -1;
     for (int i = 0; m[i] != -1; i++)
         result += m[i];
-
-    return result;
-}
-
-vector<long int> split(string str, char Delimiter) {
-    istringstream iss(str); 
-    string buffer;
-    vector<long int> result;
-    
-    while (getline(iss, buffer, Delimiter)) {    
-        long int num = stoi(buffer);
-        result.push_back(num);
-    }
 
     return result;
 }
