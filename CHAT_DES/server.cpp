@@ -8,20 +8,25 @@
 #include <arpa/inet.h>
 #include <unordered_map>
 #include <stdarg.h>
+#include <map>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
 
 #define SERVER_PORT 5208 
-#define BUF_SIZE 4096
+#define BUF_SIZE 8192
 #define MAX_CLNT 8
 
-struct RSA_BOX {
-    long int en[100];
-    long int n;
-    long int d[100];
+struct RSA_DATA {
+    unsigned char ciphertext[256];
+    int ciphertext_len;
+    RSA *rsa_keypair;
     std::string msg;
+    std::string pri;
+    std::string pub;
 };
 
 void handle_clnt(int clnt_sock);
-void send_msg(RSA_BOX data);
+void send_msg(RSA_DATA data);
 int output(const char *arg,...);
 int error_output(const char *arg,...);
 void error_handling(const std::string &message);
@@ -32,7 +37,7 @@ int clnt_cnt = 0;
 std::mutex mtx; 
 // 각 클라이언트의 이름과 소켓을 저장하는 unordered_map
 std::unordered_map<std::string, int>clnt_socks;
-map<std::string, RSA_BOX> clnt_data;
+// map<std::string, RSA_BOX> clnt_data;
 
 int main(int argc,const char **argv,const char **envp) {
     int serv_sock, clnt_sock;
@@ -98,7 +103,7 @@ void handle_clnt(int clnt_sock) {
     char tell_name[13] = "#new client:";
     while(recv(clnt_sock, buffer, sizeof(buffer), 0) != 0) {
         // 수시받은 데이터 처리
-        RSA_BOX data;
+        RSA_DATA data;
         memcpy(&data, buffer, sizeof(data));
 
         char msg[BUF_SIZE];
@@ -123,8 +128,9 @@ void handle_clnt(int clnt_sock) {
                     data.msg = std::string(name) + " 사용중인 이름입니다. 다른 이름을 선택해 주세요.";
 
                     // 구조체를 8비트 단위로 변환합니다.
-                    char *buffer = new char[sizeof(data)];
+                    memcpy(buffer, &data, sizeof(data));
                     send(clnt_sock, buffer, sizeof(data), 0);
+                    // delete[] buffer;
                     mtx.lock();
                     clnt_cnt--;
                     mtx.unlock();
@@ -135,6 +141,7 @@ void handle_clnt(int clnt_sock) {
 
         if(flag == 0) {
             // 클라이언트들에게 메세지 전송
+            // std::cout << "시발: " << RSA_check_key(data.rsa_keypair) << std::endl;
             send_msg(data);
         }
     }
@@ -151,7 +158,7 @@ void handle_clnt(int clnt_sock) {
         }
         clnt_cnt--;
         mtx.unlock();
-        RSA_BOX leave_data;
+        RSA_DATA leave_data;
         leave_data.msg = name + " 가 채팅방을 나갔습니다.";
         send_msg(leave_data);
         output("%s 가 채팅방을 나갔습니다.\n", name.c_str());
@@ -162,15 +169,17 @@ void handle_clnt(int clnt_sock) {
     }
 }
 
-void send_msg(RSA_BOX data) {
+void send_msg(RSA_DATA data) {
     mtx.lock();
     // 실시간 채팅
     for (auto it = clnt_socks.begin(); it != clnt_socks.end(); it++) {
+        std::cout << data.msg << std::endl;
         // 구조체를 8비트 단위로 변환합니다.
         char *buffer = new char[sizeof(data)];
         memcpy(buffer, &data, sizeof(data));
 
         send(it->second, buffer, sizeof(data), 0);
+        delete[] buffer;
     }
     mtx.unlock();
 }
