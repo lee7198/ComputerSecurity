@@ -140,7 +140,7 @@ void handle_clnt(int clnt_sock) {
 
         if(flag == 0) {
             // 클라이언트들에게 메세지 전송
-            std::cout << "SIZE! " << sizeof(data) << std::endl;
+            std::cout << "암호문! " << data.pri << std::endl;
             send_msg(data);
         }
     }
@@ -159,7 +159,7 @@ void handle_clnt(int clnt_sock) {
         mtx.unlock();
         RSA_DATA leave_data;
         leave_data.msg = name + " 가 채팅방을 나갔습니다.";
-        send_msg(leave_data);
+        // send_msg(leave_data);
         output("%s 가 채팅방을 나갔습니다.\n", name.c_str());
         close(clnt_sock);
     }
@@ -169,6 +169,7 @@ void handle_clnt(int clnt_sock) {
 }
 
 void send_msg(RSA_DATA data) {
+    std::cout << "SEND" << std::endl;
     mtx.lock();
     // 실시간 채팅
     for (auto it = clnt_socks.begin(); it != clnt_socks.end(); it++) {
@@ -177,9 +178,10 @@ void send_msg(RSA_DATA data) {
         memcpy(buffer, &data, sizeof(data));
 
         send(it->second, buffer, sizeof(data), 0);
-        // delete[] buffer;
+        delete[] buffer;
     }
     mtx.unlock();
+    std::cout << "SEND END" << std::endl;
 }
 
 int output(const char *arg, ...) {

@@ -206,12 +206,14 @@ RSA_DATA encrpt(RSA *key, string msg) {
     }
 
     RSA_DATA data;
-    memcpy(&data.ciphertext, &ciphertext, sizeof(unsigned char)*256);
+    ciphertext[256] = '\0';
+
+    memcpy(&data.ciphertext, &ciphertext, sizeof(string));
     memcpy(&data.ciphertext_len, &ciphertext_len, sizeof(int));
     memcpy(&data.rsa_keypair, &key, sizeof(key));
     data.rsa_keypair = key;
-    data.pub = get_pubkey(key);
-    data.pri = get_prikey(key);
+    data.pub = get_pubkey(key) + '\0';
+    data.pri = get_prikey(key) + '\0';
     data.msg = msg;
 
     // cout << "암호문: " << data.ciphertext << endl;
