@@ -96,7 +96,6 @@ int main(int argc,const char **argv,const char **envp) {
 
 void handle_clnt(int clnt_sock) {
     char buffer[BUF_SIZE];
-    // std::string msg;
     int flag = 0;
 
     // client의 이름 prefix로 지정
@@ -122,12 +121,12 @@ void handle_clnt(int clnt_sock) {
                 if(clnt_socks.find(name) == clnt_socks.end()) {
                     output("the name of socket %d: %s\n", clnt_sock, name);
                     clnt_socks[name] = clnt_sock;
-                }
-                else {
+                } else {
                     // 중복 Client 이름 처리
                     data.msg = std::string(name) + " 사용중인 이름입니다. 다른 이름을 선택해 주세요.";
 
                     // 구조체를 8비트 단위로 변환합니다.
+                    char *buffer = new char[sizeof(data)];
                     memcpy(buffer, &data, sizeof(data));
                     send(clnt_sock, buffer, sizeof(data), 0);
                     // delete[] buffer;
@@ -141,7 +140,7 @@ void handle_clnt(int clnt_sock) {
 
         if(flag == 0) {
             // 클라이언트들에게 메세지 전송
-            // std::cout << "시발: " << RSA_check_key(data.rsa_keypair) << std::endl;
+            std::cout << "SIZE! " << sizeof(data) << std::endl;
             send_msg(data);
         }
     }
@@ -173,13 +172,12 @@ void send_msg(RSA_DATA data) {
     mtx.lock();
     // 실시간 채팅
     for (auto it = clnt_socks.begin(); it != clnt_socks.end(); it++) {
-        std::cout << data.msg << std::endl;
         // 구조체를 8비트 단위로 변환합니다.
         char *buffer = new char[sizeof(data)];
         memcpy(buffer, &data, sizeof(data));
 
         send(it->second, buffer, sizeof(data), 0);
-        delete[] buffer;
+        // delete[] buffer;
     }
     mtx.unlock();
 }
