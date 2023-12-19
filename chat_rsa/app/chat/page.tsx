@@ -1,23 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, MouseEvent } from 'react';
 import axios from 'axios';
 import { useSocket } from '@/app/components/socketProvider';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-
-interface message {
-  nickname: string;
-  content: string;
-}
+import rsa, { decrypt } from 'js-crypto-rsa';
+// import { decrypt } from './utils/rsa';
+import { MSG, RSA_KEY } from '@/pages/type';
+import MsgBox from './components/msgBox';
 
 const ChatPage = () => {
   const searchParams = useSearchParams();
   const nickname = searchParams?.get('name');
 
-  const [messages, setMessages] = useState<message[]>([]);
+  const [messages, setMessages] = useState<MSG[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const { socket, isConnected } = useSocket();
+
+  const [keyPair, setKeyPair] = useState<RSA_KEY | undefined>(undefined);
 
   useEffect(() => {
     if (!socket) {
@@ -33,14 +34,52 @@ const ChatPage = () => {
     };
   }, [socket, messages]);
 
-  const sendMessage = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const sendMessage = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    await axios.post('/api/chat', {
-      nickname: nickname,
-      content: currentMessage,
-    });
+    if (!currentMessage) return;
+    if (!keyPair) return;
+    if (!keyPair.publicKey) return;
+    if (!keyPair.privateKey) return;
+
+    const utf8EncodeText = new TextEncoder();
+
+    // encrypt
+    rsa
+      .encrypt(
+        utf8EncodeText.encode(currentMessage),
+        keyPair.publicKey,
+        'SHA-256'
+      )
+      .then(async (encrypted) => {
+        // 전송
+        await axios.post('/api/chat', {
+          nickname: nickname,
+          content: currentMessage,
+          ciphertext: encrypted,
+          privateKey: keyPair.privateKey,
+        });
+      });
+
     setCurrentMessage('');
   };
+
+  useEffect(() => {
+    // key 생성
+    axios.post('/api/keygen', { nickname: nickname }).then((res) => {
+      setKeyPair(res.data);
+
+      // 서버로부터 서버 공개키, 타 클라이언트 공개키, 타 클라이언트 증명값 받기
+      axios.get(`/api/keygen?name=${nickname}`).then((res_) => {
+        console.log(res_.data);
+      });
+    });
+
+    // 언마운트 시 서버에 삭제 요청
+    return () => {
+      axios.delete(`/api/keygen?name=${nickname}`);
+    };
+  }, []);
+
   if (!nickname)
     return (
       <div className="flex h-[100svh] w-full flex-col items-center justify-center gap-4">
@@ -58,39 +97,28 @@ const ChatPage = () => {
         <div className="flex items-center justify-between px-4 py-2 capitalize">
           <div>{nickname}</div>
           <div
-            className={`h-3 w-3 rounded-full ${
-              isConnected ? 'bg-green-500' : 'bg-yellow-400'
+            className={`h-3 w-3 animate-pulse rounded-full ${
+              isConnected ? 'bg-green-500 ' : 'bg-yellow-400'
             }`}
           />
         </div>
+        <div className="mb-2 h-[1px] w-full bg-zinc-200" />
 
         {/* 채팅 */}
         <div className="h-full overflow-y-scroll p-4 pt-0">
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={
-                'max-w-3/4 relative flex w-max flex-col gap-2 rounded-lg px-3 py-1 text-sm ' +
-                (message.nickname !== nickname
-                  ? 'mb-6 bg-zinc-100'
-                  : 'mb-6 ml-auto bg-blue-400 text-white')
-              }
-            >
-              <div className="absolute -top-4 left-0 text-xs">
-                {message.nickname}
-              </div>
-              {message.content}
-            </div>
+            <MsgBox message={message} nickname={nickname} key={index} />
           ))}
         </div>
 
+        <div className="mt-2 h-[1px] w-full bg-zinc-200" />
         <form className="flex w-full items-center gap-2 p-2">
           <input
             type="text"
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
             placeholder="메세지을 입력하세요"
-            className="w-full rounded-md border px-3 py-1 text-sm outline-none"
+            className="w-full rounded-md px-3 py-1 text-sm outline-none"
           ></input>
           <button
             type="submit"

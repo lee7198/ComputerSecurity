@@ -1,5 +1,6 @@
 'use client';
 
+import axios from 'axios';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io as ClientIO } from 'socket.io-client';
 
